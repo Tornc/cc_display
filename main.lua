@@ -5,6 +5,7 @@ local display = require("display")
 local physics = require("physics")
 
 local MONITOR = peripheral.find("monitor")
+MONITOR.setTextScale(0.5)
 MONITOR.clear()
 
 local mouse_x, mouse_y

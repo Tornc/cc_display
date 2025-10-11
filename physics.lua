@@ -44,7 +44,7 @@ end
 local function mouse_collision(p, mx, my)
     if not (mx and my) then return end
 
-    local r = 4     -- Mouse collision radius
+    local r = 5     -- Mouse collision radius
     local force = 5 -- Mouse force
 
     local dx = p.x - mx

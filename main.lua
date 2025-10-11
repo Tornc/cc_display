@@ -5,7 +5,6 @@ local display = require("display")
 local physics = require("physics")
 
 local MONITOR = peripheral.find("monitor")
-MONITOR.setTextScale(0.5)
 MONITOR.clear()
 
 local mouse_x, mouse_y
@@ -18,13 +17,17 @@ local function round(n) return math.floor(n + 0.5) end
 
 local function main()
     local fg = colours.toBlit(colours.white)
-    local bg = colours.toBlit(colours.black)
-    local bw, bh = 2 * 34, 3 * 24 -- 2x2 monitor at 0.5 scale
+    local bg = colours.toBlit(colours.blue)
+
+    -- Determine monitor resolution
+    local mw, mh = MONITOR.getSize()
+
     -- Virtual display (full resolution)
-    local cv = display.canvas(bw, bh, fg, bg)
-    local pm = physics.particle_manager().create(100, bw, bh)
+    local cv = display.canvas(mw * 2, mh * 3, fg, bg)
+    local pm = physics.particle_manager().create(100, cv.w, cv.h)
+
     -- Actual display output (downscaled resolution)
-    local win = window.create(MONITOR, 1, 1, bw / 2, bh / 3)
+    local win = window.create(MONITOR, 1, 1, cv.w / 2, cv.h / 3)
     local wx, wy = win.getPosition()
 
     while true do
@@ -34,6 +37,16 @@ local function main()
         win.clear()
         cv.clear()
 
+        -- Adjust play area if monitor changes size.
+        mw, mh = MONITOR.getSize()
+        if mw * 2 * mh * 3 ~= cv.w * cv.h then
+            cv.mark = {}
+            cv.w, cv.h = mw * 2, mh * 3
+            pm.w, pm.h = cv.w, cv.h
+            win.reposition(wx, wy, mw, mh)
+        end
+
+        -- In case window is not at 1, 1.
         local rx, ry
         if mouse_x and mouse_y then
             rx = (mouse_x - wx + 1) * 2
@@ -51,8 +64,8 @@ local function main()
         win.setVisible(true)
 
         term.clear()
-        print(db_info.get_fps(os.epoch("utc") - t1))
-        print(db_info.get_ram())
+        print(db_info.get_frame_time(os.epoch("utc") - t1))
+        print(db_info.get_mem())
 
         os.sleep(0.05)
     end

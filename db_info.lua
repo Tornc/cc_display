@@ -1,34 +1,32 @@
 local db_info = {}
 
-local fps_values = {}
+local MAX_FT_SAMPLES = 100
+
+local frame_times = {}
 
 local function round(n) return math.floor(n + 0.5) end
 
-function db_info.get_fps(dt)
-    local fps = round(1000 / dt)
-    table.insert(fps_values, fps)
-    if #fps_values > 100 then table.remove(fps_values, 1) end
-    local avg, low_1
+function db_info.get_frame_time(dt)
+    table.insert(frame_times, dt)
+    if #frame_times > MAX_FT_SAMPLES then table.remove(frame_times, 1) end
 
     local total = 0
-    for i = 1, #fps_values do
-        total = total + fps_values[i]
-    end
-    avg = round(total / #fps_values)
+    for i = 1, #frame_times do total = total + frame_times[i] end
+    local avg = round(total / #frame_times)
 
     local sorted = {}
-    for i, v in ipairs(fps_values) do sorted[i] = v end
+    for i, v in ipairs(frame_times) do sorted[i] = v end
     table.sort(sorted)
-    low_1 = sorted[math.max(1, math.floor(#sorted * 0.01))]
+    local top_99 = sorted[math.min(#sorted, math.ceil(#sorted * 0.99))]
 
     return
-        "FPS: " .. fps .. " | " ..
-        "AVG: " .. avg .. " | " ..
-        "1% low: " ..  low_1
+        "Frame Time: " .. dt .. "ms | " ..
+        "AVG: " .. avg .. "ms | " ..
+        "99%: " .. top_99 .. "ms"
 end
 
-function db_info.get_ram()
-    return ("RAM: %.1f KB"):format(collectgarbage("count"))
+function db_info.get_mem()
+    return ("MEM: %.1f KB"):format(collectgarbage("count"))
 end
 
 return db_info

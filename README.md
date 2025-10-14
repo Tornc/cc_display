@@ -7,6 +7,3 @@ Hopefully it's not seen as plagiarism 😭.
 
 ### Demo:
 ![demo](demo.gif)
-
-### TODO:
-- Spatial partitioning

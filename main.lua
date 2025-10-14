@@ -1,4 +1,5 @@
 periphemu.create("front", "monitor")
+periphemu.create("back", "debugger")
 
 local db_info = require("db_info")
 local display = require("display")
@@ -17,14 +18,14 @@ local function round(n) return math.floor(n + 0.5) end
 
 local function main()
     local fg = colours.toBlit(colours.white)
-    local bg = colours.toBlit(colours.blue)
+    local bg = colours.toBlit(colours.black)
 
     -- Determine monitor resolution
     local mw, mh = MONITOR.getSize()
 
     -- Virtual display (full resolution)
     local cv = display.canvas(mw * 2, mh * 3, fg, bg)
-    local pm = physics.particle_manager().create(100, cv.w, cv.h)
+    local pm = physics.particle_manager(100, cv.w, cv.h)
 
     -- Actual display output (downscaled resolution)
     local win = window.create(MONITOR, 1, 1, cv.w / 2, cv.h / 3)
@@ -34,7 +35,6 @@ local function main()
         local t1 = os.epoch("utc")
 
         win.setVisible(false)
-        win.clear()
         cv.clear()
 
         -- Adjust play area if monitor changes size.
@@ -46,7 +46,7 @@ local function main()
             win.reposition(wx, wy, mw, mh)
         end
 
-        -- In case window is not at 1, 1.
+        -- In case window is not at 1, 1. Also account for subpixels being smaller.
         local rx, ry
         if mouse_x and mouse_y then
             rx = (mouse_x - wx + 1) * 2
@@ -63,8 +63,10 @@ local function main()
         display.blit_canvas(win, cv)
         win.setVisible(true)
 
+        local t2 = os.epoch("utc")
+
         term.clear()
-        print(db_info.get_frame_time(os.epoch("utc") - t1))
+        print(db_info.get_frame_time(t2 - t1))
         print(db_info.get_mem())
 
         os.sleep(0.05)
@@ -72,3 +74,10 @@ local function main()
 end
 
 parallel.waitForAny(main, input_listener)
+
+--- @TODO: 
+--- 1. multi-colour --> count, most = fg, for bg not 2nd most, but most of NOT fg!!!
+--- 2. display on term instead of monitor
+---    use mut for debug
+--- 3. particle: ax, ay --> move() vx, vy += ax (0), ay (grav)
+--- 4. N-body sim on top of collision

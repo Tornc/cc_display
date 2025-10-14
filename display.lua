@@ -44,7 +44,7 @@ local CIRCLE = {
 
 --- I was **this** close to brute-force mapping all 64 combinations by hand.
 --- My saviour: https://github.com/exerro/ccgl/blob/master/src/functions/texture_subpixel_convert.lua
-local function shrink_pixels_3x2(b1, b2, b3, b4, b5, b6)
+local function shrink_pixels_2x3(b1, b2, b3, b4, b5, b6)
     local count =
         (b1 and 1 or 0) +
         (b2 and 1 or 0) +
@@ -79,16 +79,20 @@ function display.canvas(w, h, fg, bg)
 
     self.frame = 0
     self.mark = {}
-    self.clear = function()
+
+    function self.clear()
         self.frame = self.frame + 1
     end
-    self.put = function(x, y)
+
+    function self.put(x, y)
         if x < 1 or x > self.w or y < 1 or y > self.h then return end
         self.mark[(y - 1) * self.w + x] = self.frame
     end
-    self.is_set = function(i)
+
+    function self.is_set(i)
         return self.mark[i] == self.frame
     end
+
     return self
 end
 
@@ -116,10 +120,10 @@ function display.blit_canvas(win, cv)
             local b5 = isset(i + (2 * cvw))     -- bottom-left
             local b6 = isset(i + (2 * cvw) + 1) -- bottom-right
 
-            local ch, sw = shrink_pixels_3x2(b1, b2, b3, b4, b5, b6)
+            local ch, sw = shrink_pixels_2x3(b1, b2, b3, b4, b5, b6)
             chrs[x] = string.char(ch)
             tcs[x] = sw and cvbg or cvfg
-            bgcs[x] =sw and cvfg or cvbg
+            bgcs[x] = sw and cvfg or cvbg
         end
         -- Do NOT blit separately for every pixel; it will cause massive stutters!
         win.setCursorPos(1, y)

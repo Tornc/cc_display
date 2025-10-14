@@ -41,10 +41,7 @@ local function border_collision(p, w, h)
     end
 end
 
-local function mouse_collision(p, mx, my)
-    if not (mx and my) then return end
-
-    local r = 5     -- Mouse collision radius
+local function mouse_collision(r, p, mx, my)
     local force = 5 -- Mouse force
 
     local dx = p.x - mx
@@ -73,9 +70,9 @@ local function particle_collision(p1, p2)
     if p1.m == 0 and p2.m == 0 then return end
 
     --- Unit vector
-    local magnitude = math.sqrt(sq_dist)
-    local v_un_x = dx / magnitude
-    local v_un_y = dy / magnitude
+    local inv_mag = 1 / math.sqrt(sq_dist)
+    local v_un_x = dx * inv_mag
+    local v_un_y = dy * inv_mag
 
     -- Unit tangent vector
     local v_ut_x = -v_un_y
@@ -92,8 +89,9 @@ local function particle_collision(p1, p2)
     local v2t_hat = v2t
 
     -- Calulate new normal velocities with 1D collision formula
-    local v1n_hat = (v1n * (p1.m - p2.m) + 2 * p2.m * v2n) / (p1.m + p2.m)
-    local v2n_hat = (v2n * (p2.m - p1.m) + 2 * p1.m * v1n) / (p1.m + p2.m)
+    local m1, m2 = p1.m, p2.m
+    local v1n_hat = (v1n * (m1 - m2) + 2 * m2 * v2n) / (m1 + m2)
+    local v2n_hat = (v2n * (m2 - m1) + 2 * m1 * v1n) / (m1 + m2)
 
     -- Calulate new normal and tangential velocity vectors
     local v_v1n_hat_x = v1n_hat * v_un_x
@@ -125,40 +123,95 @@ local function weighted_random_pick(v_tbl, p_tbl)
     return v_tbl[#v_tbl] -- Fallback
 end
 
-function physics.particle_manager()
+local function spatial_grid(cell_size)
+    --- @class SpatialGrid
+    local self = {}
+    self.cell_size = cell_size
+    self.cells = {}
+
+    function self.rebuild(particles)
+        local cells = {}
+        local insert = table.insert
+        local floor = math.floor
+        local cs = self.cell_size
+
+        for i = 1, #particles do
+            local p = particles[i]
+            local px, py, pr = p.x, p.y, p.r
+            -- Note: these are grid coordinates, not particle positions.
+            local min_x = floor((px - pr) / cs)
+            local max_x = floor((px + pr) / cs)
+            local min_y = floor((py - pr) / cs)
+            local max_y = floor((py + pr) / cs)
+            for y = min_y, max_y do
+                if not cells[y] then cells[y] = {} end
+                for x = min_x, max_x do
+                    if not cells[y][x] then cells[y][x] = {} end
+                    insert(cells[y][x], p)
+                end
+            end
+        end
+        self.cells = cells
+    end
+
+    return self
+end
+
+function physics.particle_manager(n, w, h)
+    --- @class ParticleManager
     local self = {}
 
-    function self.create(n, w, h)
-        self.w = w
-        self.h = h
-        self.particles = {}
-        local radii = { 0.5, 1.5, 2.5, 3.5 }
-        local probs = { 0.65, 0.25, 0.08, 0.02 }
-        for _ = 1, n do
-            table.insert(
-                self.particles,
-                particle(
-                    math.random(1, self.w),
-                    math.random(1, self.h),
-                    weighted_random_pick(radii, probs),
-                    math.random(1, 20)
-                )
+    self.w = w
+    self.h = h
+    self.particles = {}
+    self.grid = spatial_grid(10)
+
+    local radii = { 0.5, 1.5, 2.5, 3.5 }
+    local probs = { 0.65, 0.25, 0.08, 0.02 }
+    for _ = 1, n do
+        table.insert(
+            self.particles,
+            particle(
+                math.random(1, self.w),
+                math.random(1, self.h),
+                weighted_random_pick(radii, probs),
+                math.random(1, 20)
             )
-        end
-        return self
+        )
     end
 
     function self.update(mx, my)
-        for i = 1, #self.particles do
-            local p = self.particles[i]
-            move(p)
-            mouse_collision(p, mx, my)
-            --- @TODO: spatial partitioning
-            for j = i + 1, #self.particles do
-                particle_collision(p, self.particles[j])
+        for _, p in ipairs(self.particles) do move(p) end
+        self.grid.rebuild(self.particles)
+
+        if mx and my then
+            local r = 4.5 -- Mouse collision radius
+            local min_x = math.floor((mx - r) / self.grid.cell_size)
+            local max_x = math.floor((mx + r) / self.grid.cell_size)
+            local min_y = math.floor((my - r) / self.grid.cell_size)
+            local max_y = math.floor((my + r) / self.grid.cell_size)
+            for y = min_y, max_y do
+                if not self.grid.cells[y] then goto continue end
+                for x = min_x, max_x do
+                    if not self.grid.cells[y][x] then goto continue end
+                    for _, p in ipairs(self.particles) do mouse_collision(r, p, mx, my) end
+                    ::continue::
+                end
+                ::continue::
             end
-            border_collision(p, self.w, self.h)
         end
+
+        for _, row in pairs(self.grid.cells) do
+            for _, cell_particles in pairs(row) do
+                for i = 1, #cell_particles do
+                    for j = i + 1, #cell_particles do
+                        particle_collision(cell_particles[i], cell_particles[j])
+                    end
+                end
+            end
+        end
+        --- @TODO: this is stupid, make use of the grid.
+        for _, p in ipairs(self.particles) do border_collision(p, self.w, self.h) end
     end
 
     return self

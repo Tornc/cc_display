@@ -52,8 +52,8 @@ local function shrink_bitmap_2x3(b1, b2, b3, b4, b5, b6)
         (b5 and 1 or 0) +
         (b6 and 1 or 0)
 
-    if count == 0 then return 0, false end
-    if count == 6 then return 0, true end
+    if count == 0 then return " ", false end
+    if count == 6 then return " ", true end
 
     local swap = count >= 3
     if b6 ~= swap then swap = not swap end -- Special case for the last bit
@@ -69,9 +69,9 @@ end
 
 --- I was **this** close to brute-force mapping all 64 combinations by hand.
 --- My saviour: https://github.com/exerro/ccgl/blob/master/src/functions/texture_subpixel_convert.lua
-local function shrink_pixels_2x3_v2(c1, c2, c3, c4, c5, c6)
+local function shrink_pixels_2x3(c1, c2, c3, c4, c5, c6)
     if c1 == c2 and c2 == c3 and c3 == c4 and c4 == c5 and c5 == c6 then
-        return 0, c1, c1
+        return " ", c1, c1
     end
 
     local colour_counts = {}
@@ -146,7 +146,7 @@ function display.blit_canvas(win, cv)
             local c5 = cvp[i + (2 * cvw)]     -- bottom-left
             local c6 = cvp[i + (2 * cvw) + 1] -- bottom-right
 
-            chrs[x], tcs[x], bgcs[x] = shrink_pixels_2x3_v2(c1, c2, c3, c4, c5, c6)
+            chrs[x], tcs[x], bgcs[x] = shrink_pixels_2x3(c1, c2, c3, c4, c5, c6)
         end
         -- Do NOT blit separately for every pixel; it will cause massive stutters!
         win.setCursorPos(1, y)

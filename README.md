@@ -1,10 +1,9 @@
-Simple physics sim, just wanted to experiment with sub-pixel rendering :P
+Experimenting with multi-colour subpixel rendering. See the `lib` folder for the meat and potatoes.
 
 ### Note:
-For subpixel rendering, I used exerro's method of getting the correct character. See here: https://github.com/exerro/ccgl/blob/master/src/functions/texture_subpixel_convert.lua.
+For converting a texture to subpixels, I used exerro's method of getting the correct character. See: https://github.com/exerro/ccgl/blob/master/src/functions/texture_subpixel_convert.lua. Hopefully it's not seen as plagiarism 😓.
 
-Hopefully it's not seen as plagiarism 😓.
-
-### Demos
-![physics!!!](./media/physics.gif)
-![physics!!!](./media/video.gif)
+### Interactive physics simulation
+![physics](./media/physics.gif)
+### Video playback
+![video](./media/video.gif)

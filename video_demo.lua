@@ -20,7 +20,6 @@ local function apply_palette(screen, palette)
     for i = 1, #palette do screen.setPaletteColor(2 ^ (i - 1), palette[i]) end
 end
 
-
 local reader = video.encoded_video_reader(VIDEO_PATH)
 local mw, mh = reader.width / 2, reader.height / 3 -- CraftOS default is 51, 19
 local cv = display.canvas(mw * 2, mh * 3, colours.toBlit(colours.black))

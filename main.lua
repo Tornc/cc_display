@@ -1,5 +1,5 @@
 periphemu.create("front", "monitor")
-periphemu.create("back", "debugger")
+-- periphemu.create("back", "debugger")
 
 local db_info = require("db_info")
 local display = require("display")
@@ -17,15 +17,14 @@ end
 local function round(n) return math.floor(n + 0.5) end
 
 local function main()
-    local fg = colours.toBlit(colours.white)
     local bg = colours.toBlit(colours.black)
 
     -- Determine monitor resolution
     local mw, mh = MONITOR.getSize()
 
     -- Virtual display (full resolution)
-    local cv = display.canvas(mw * 2, mh * 3, fg, bg)
-    local pm = physics.particle_manager(100, cv.w, cv.h)
+    local cv = display.canvas(mw * 2, mh * 3, bg)
+    local pm = physics.particle_manager(250, 15, cv.w, cv.h)
 
     -- Actual display output (downscaled resolution)
     local win = window.create(MONITOR, 1, 1, cv.w / 2, cv.h / 3)
@@ -40,8 +39,8 @@ local function main()
         -- Adjust play area if monitor changes size.
         mw, mh = MONITOR.getSize()
         if mw * 2 * mh * 3 ~= cv.w * cv.h then
-            cv.mark = {}
             cv.w, cv.h = mw * 2, mh * 3
+            cv.clear()
             pm.w, pm.h = cv.w, cv.h
             win.reposition(wx, wy, mw, mh)
         end
@@ -56,7 +55,7 @@ local function main()
         pm.update(rx, ry)
         for i = 1, #pm.particles do
             local p = pm.particles[i]
-            display.draw_circle(cv, round(p.x), round(p.y), p.r * 2)
+            display.draw_circle(cv, round(p.x), round(p.y), p.r * 2, p.c)
         end
         mouse_x, mouse_y = nil, nil
 
@@ -75,9 +74,8 @@ end
 
 parallel.waitForAny(main, input_listener)
 
---- @TODO: 
---- 1. multi-colour --> count, most = fg, for bg not 2nd most, but most of NOT fg!!!
---- 2. display on term instead of monitor
+--- @TODO:
+--- 1. display on term instead of monitor
 ---    use mut for debug
---- 3. particle: ax, ay --> move() vx, vy += ax (0), ay (grav)
---- 4. N-body sim on top of collision
+--- 2. particle: ax, ay --> move() vx, vy += ax (0), ay (grav)
+--- 3. N-body sim on top of collision

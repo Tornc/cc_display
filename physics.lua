@@ -3,13 +3,14 @@ local physics = {}
 local GRAVITY = 0.05
 local DRAG_COEFFICIENT = 0.9
 
-local function particle(x, y, radius, density)
+local function particle(x, y, radius, density, particle_colour)
     --- @class Particle
     local self = {}
     self.x = x
     self.y = y
     self.r = radius
     self.m = density * (self.r * 2) * (self.r * 2)
+    self.c = particle_colour
 
     self.vx = (math.random() - 0.5) * 2
     self.vy = (math.random() - 0.5) * 2
@@ -70,7 +71,8 @@ local function particle_collision(p1, p2)
     if p1.m == 0 and p2.m == 0 then return end
 
     --- Unit vector
-    local inv_mag = 1 / math.sqrt(sq_dist)
+    local dist = math.sqrt(sq_dist)
+    local inv_mag = 1 / dist
     local v_un_x = dx * inv_mag
     local v_un_y = dy * inv_mag
 
@@ -108,19 +110,18 @@ local function particle_collision(p1, p2)
     p1.vy = v_v1n_hat_y + v_v1t_hat_y
     p2.vx = v_v2n_hat_x + v_v2t_hat_x
     p2.vy = v_v2n_hat_y + v_v2t_hat_y
-end
 
---- @param v_tbl table<any>
---- @param p_tbl table<number> Must have same length. Must sum to 1.
---- @return any
-local function weighted_random_pick(v_tbl, p_tbl)
-    local rand_val = math.random()
-    local cum_weight = 0
-    for i, weight in ipairs(p_tbl) do
-        cum_weight = cum_weight + weight
-        if rand_val <= cum_weight then return v_tbl[i] end
+    -- Overlap resolution
+    local overlap = r_sum - dist
+    if overlap > 0 then
+        local corr_x  = v_un_x * overlap / (m1 + m2)
+        local corr_y  = v_un_y * overlap / (m1 + m2)
+        -- Separate along normal
+        p1.x = p1.x - corr_x * p2.m
+        p1.y = p1.y - corr_y * p2.m
+        p2.x = p2.x + corr_x * p1.m
+        p2.y = p2.y + corr_y * p1.m
     end
-    return v_tbl[#v_tbl] -- Fallback
 end
 
 local function spatial_grid(cell_size)
@@ -157,7 +158,20 @@ local function spatial_grid(cell_size)
     return self
 end
 
-function physics.particle_manager(n, w, h)
+--- @param v_tbl table<any>
+--- @param p_tbl table<number> Must have same length. Must sum to 1.
+--- @return any
+local function weighted_random_pick(v_tbl, p_tbl)
+    local rand_val = math.random()
+    local cum_weight = 0
+    for i, weight in ipairs(p_tbl) do
+        cum_weight = cum_weight + weight
+        if rand_val <= cum_weight then return v_tbl[i] end
+    end
+    return v_tbl[#v_tbl] -- Fallback
+end
+
+function physics.particle_manager(n, n_cols, w, h)
     --- @class ParticleManager
     local self = {}
 
@@ -168,6 +182,10 @@ function physics.particle_manager(n, w, h)
 
     local radii = { 0.5, 1.5, 2.5, 3.5 }
     local probs = { 0.65, 0.25, 0.08, 0.02 }
+    local hex_chars = "0123456789abcdef"
+    local clrs = {}
+    for i = 1, n_cols do clrs[i] = hex_chars:sub(i, i) end
+
     for _ = 1, n do
         table.insert(
             self.particles,
@@ -175,7 +193,8 @@ function physics.particle_manager(n, w, h)
                 math.random(1, self.w),
                 math.random(1, self.h),
                 weighted_random_pick(radii, probs),
-                math.random(1, 20)
+                math.random(1, 20),
+                clrs[math.random(1, #clrs)]
             )
         )
     end
@@ -194,7 +213,7 @@ function physics.particle_manager(n, w, h)
                 if not self.grid.cells[y] then goto continue end
                 for x = min_x, max_x do
                     if not self.grid.cells[y][x] then goto continue end
-                    for _, p in ipairs(self.particles) do mouse_collision(r, p, mx, my) end
+                    for _, p in ipairs(self.grid.cells[y][x]) do mouse_collision(r, p, mx, my) end
                     ::continue::
                 end
                 ::continue::

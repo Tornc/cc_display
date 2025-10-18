@@ -1,13 +1,11 @@
 periphemu.create("front", "monitor")
 -- periphemu.create("back", "debugger")
 
-local db_info = require("db_info")
-local display = require("display")
-local physics = require("physics")
+local db_info = require("lib.db_info")
+local display = require("lib.display")
+local physics = require("lib.physics")
 
 local MONITOR = peripheral.find("monitor")
-MONITOR.clear()
-
 local mouse_x, mouse_y
 
 local function input_listener()
@@ -17,15 +15,11 @@ end
 local function round(n) return math.floor(n + 0.5) end
 
 local function main()
-    local bg = colours.toBlit(colours.black)
-
     -- Determine monitor resolution
     local mw, mh = MONITOR.getSize()
-
     -- Virtual display (full resolution)
-    local cv = display.canvas(mw * 2, mh * 3, bg)
+    local cv = display.canvas(mw * 2, mh * 3, colours.toBlit(colours.black))
     local pm = physics.particle_manager(250, 15, cv.w, cv.h)
-
     -- Actual display output (downscaled resolution)
     local win = window.create(MONITOR, 1, 1, cv.w / 2, cv.h / 3)
     local wx, wy = win.getPosition()

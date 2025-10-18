@@ -52,16 +52,4 @@ function video.encoded_video_reader(file_path)
     return self
 end
 
-function video.rgba_to_palette_indices(pixels, palette)
-    local lookup = {}
-    for i = 1, #palette do lookup[palette[i]] = i - 1 end
-    local indices = {}
-    for i = 1, #pixels do indices[i] = lookup[pixels[i]] end
-    return indices
-end
-
-function video.apply_palette(screen, palette)
-    for i = 1, #palette do screen.setPaletteColor(2 ^ (i - 1), palette[i]) end
-end
-
 return video

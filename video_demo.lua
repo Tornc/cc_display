@@ -8,6 +8,19 @@ local MONITOR = peripheral.find("monitor")
 -- Change this; I'm just suffering from the fact that everything starts from root.
 local VIDEO_PATH = "./cc_display/media/water_144"
 
+local function rgba_to_palette_indices(pixels, palette)
+    local lookup = {}
+    for i = 1, #palette do lookup[palette[i]] = i - 1 end
+    local indices = {}
+    for i = 1, #pixels do indices[i] = lookup[pixels[i]] end
+    return indices
+end
+
+local function apply_palette(screen, palette)
+    for i = 1, #palette do screen.setPaletteColor(2 ^ (i - 1), palette[i]) end
+end
+
+
 local reader = video.encoded_video_reader(VIDEO_PATH)
 local mw, mh = reader.width / 2, reader.height / 3 -- CraftOS default is 51, 19
 local cv = display.canvas(mw * 2, mh * 3, colours.toBlit(colours.black))
@@ -23,14 +36,14 @@ while true do
         reader.restart()
         frame, palette = reader.next_frame()
     end
-    for i, ci in ipairs(video.rgba_to_palette_indices(frame, palette)) do
+    for i, ci in ipairs(rgba_to_palette_indices(frame, palette)) do
         cv.pixels[i] = colours.toBlit(2 ^ ci)
     end
     display.blit_canvas(win, cv)
     win.setVisible(true)
     -- HAS to be after win.setVisible(true) for some reason. Otherwise, you'll get
     -- flickering and completely wrong colours (using the default palette).
-    video.apply_palette(MONITOR, palette)
+    apply_palette(MONITOR, palette)
 
     local t2 = os.epoch("utc")
     term.clear()

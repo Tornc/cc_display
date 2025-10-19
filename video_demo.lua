@@ -5,8 +5,7 @@ local display = require("lib.display")
 local video = require("lib.video")
 
 local MONITOR = peripheral.find("monitor")
--- Change this; I'm just suffering from the fact that everything starts from root.
-local VIDEO_PATH = "./cc_display/media/water_144"
+local VIDEO_PATH = shell.resolve("./media/water_144")
 
 local function rgba_to_palette_indices(pixels, palette)
     local lookup = {}

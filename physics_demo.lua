@@ -8,6 +8,30 @@ local physics = require("lib.physics")
 local MONITOR = peripheral.find("monitor")
 local mouse_x, mouse_y
 
+local CIRCLE = {
+    [3] = {
+        true, true, true,
+        true, true, true,
+        true, true, true,
+    },
+    [5] = {
+        false, true, true, true, false,
+        true, true, true, true, true,
+        true, true, true, true, true,
+        true, true, true, true, true,
+        false, true, true, true, false,
+    },
+    [7] = {
+        false, false, true, true, true, false, false,
+        false, true, true, true, true, true, false,
+        true, true, true, true, true, true, true,
+        true, true, true, true, true, true, true,
+        true, true, true, true, true, true, true,
+        false, true, true, true, true, true, false,
+        false, false, true, true, true, false, false,
+    }
+}
+
 local function input_listener()
     while true do _, _, mouse_x, mouse_y = os.pullEvent("monitor_touch") end
 end
@@ -49,7 +73,14 @@ local function main()
         pm.update(rx, ry)
         for i = 1, #pm.particles do
             local p = pm.particles[i]
-            display.draw_circle(cv, round(p.x), round(p.y), p.r * 2, p.c)
+            local size = p.r * 2
+            if size == 1 then
+                cv.put_pixel(round(p.x), round(p.y), p.c)
+            else
+                local o_x = p.x - math.floor(p.r) - 1
+                local o_y = p.y - math.floor(p.r) - 1
+                cv.blit(CIRCLE[size], round(o_x), round(o_y), size, p.c)
+            end
         end
         mouse_x, mouse_y = nil, nil
 

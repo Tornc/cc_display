@@ -1,47 +1,5 @@
 local display = {}
 
-local CIRCLE = {
-    [2] = {
-        true, true,
-        true, true
-    },
-    [3] = {
-        true, true, true,
-        true, true, true,
-        true, true, true,
-    },
-    [4] = {
-        false, true, true, false,
-        true, true, true, true,
-        true, true, true, true,
-        false, true, true, false,
-    },
-    [5] = {
-        false, true, true, true, false,
-        true, true, true, true, true,
-        true, true, true, true, true,
-        true, true, true, true, true,
-        false, true, true, true, false,
-    },
-    [6] = {
-        false, true, true, true, true, false,
-        true, true, true, true, true, true,
-        true, true, true, true, true, true,
-        true, true, true, true, true, true,
-        true, true, true, true, true, true,
-        false, true, true, true, true, false,
-    },
-    [7] = {
-        false, false, true, true, true, false, false,
-        false, true, true, true, true, true, false,
-        true, true, true, true, true, true, true,
-        true, true, true, true, true, true, true,
-        true, true, true, true, true, true, true,
-        false, true, true, true, true, true, false,
-        false, false, true, true, true, false, false,
-    }
-}
-
 --- Not used, but kept as I just really like it.
 local function shrink_bitmap_2x3(b1, b2, b3, b4, b5, b6)
     local count =
@@ -115,9 +73,86 @@ function display.canvas(w, h, bg)
         for i = 1, self.w * self.h do self.pixels[i] = self.bg end
     end
 
-    function self.set_pixel(x, y, col)
+    function self.put_pixel(x, y, col)
         if x < 1 or x > self.w or y < 1 or y > self.h then return end
         self.pixels[(y - 1) * self.w + x] = col
+    end
+
+    --- https://en.wikipedia.org/wiki/Bresenham%27s_line_algorithm
+    function self.draw_line(x1, y1, x2, y2, col)
+        local dx = math.abs(x2 - x1)
+        local sx = x1 < x2 and 1 or -1
+        local dy = -math.abs(y2 - y1)
+        local sy = y1 < y2 and 1 or -1
+        local err = dx + dy
+
+        local put = self.put_pixel
+        while true do
+            put(x1, y1, col)
+            local err2 = 2 * err
+            if err2 >= dy then
+                if x1 == x2 then break end
+                err = err + dy
+                x1 = x1 + sx
+            end
+            if err2 <= dx then
+                if y1 == y2 then break end
+                err = err + dx
+                y1 = y1 + sy
+            end
+        end
+    end
+
+    function self.draw_circle(cx, cy, r, col)
+        local x = 0
+        local y = r
+        local p = 1 - r
+        local put = self.put_pixel
+
+        while x <= y do
+            put(cx + x, cy + y, col)
+            put(cx - x, cy + y, col)
+            put(cx + x, cy - y, col)
+            put(cx - x, cy - y, col)
+            put(cx + y, cy + x, col)
+            put(cx - y, cy + x, col)
+            put(cx + y, cy - x, col)
+            put(cx - y, cy - x, col)
+
+            x = x + 1
+            if p < 0 then
+                p = p + 2 * x + 1
+            else
+                y = y - 1
+                p = p + 2 * (x - y) + 1
+            end
+        end
+    end
+
+    function self.fill(x, y, width, height, col)
+        local xs, xe = math.max(x, 1), math.min(x + width - 1, self.w)
+        local ys, ye = math.max(y, 1), math.min(y + height - 1, self.h)
+        for _y = ys, ye do
+            local y_off = (_y - 1) * self.w
+            for _x = xs, xe do
+                self.pixels[y_off + _x] = col
+            end
+        end
+    end
+
+    function self.blit(bitmap, x, y, width, col)
+        local height = #bitmap / width
+        local xs, xe = math.max(x, 1), math.min(x + width - 1, self.w)
+        local ys, ye = math.max(y, 1), math.min(y + height - 1, self.h)
+        for _y = ys, ye do
+            local src_y = _y - y + 1
+            for _x = xs, xe do
+                local src_x = _x - x + 1
+                if bitmap[(src_y - 1) * width + src_x] then
+                    self.pixels[(_y - 1) * self.w + _x] = col
+                end
+            end
+        end
     end
 
     return self
@@ -151,26 +186,6 @@ function display.blit_canvas(win, cv)
         -- Do NOT blit separately for every pixel; it will cause massive stutters!
         win.setCursorPos(1, y)
         win.blit(table.concat(chrs), table.concat(tcs), table.concat(bgcs))
-    end
-end
-
-function display.draw_circle(canvas, x, y, diameter, col)
-    if diameter == 1 then
-        canvas.set_pixel(x, y, col); return
-    end
-
-    local o_x = x - math.floor(diameter / 2) - 1
-    local o_y = y - math.floor(diameter / 2) - 1
-
-    local bm = CIRCLE[diameter]
-    local set_pixel = canvas.set_pixel --- @type function
-    for _y = 1, diameter do
-        local y_off = o_y + _y
-        for _x = 1, diameter do
-            if bm[(_y - 1) * diameter + _x] then
-                set_pixel(o_x + _x, y_off, col)
-            end
-        end
     end
 end
 

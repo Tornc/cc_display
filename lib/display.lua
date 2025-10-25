@@ -103,6 +103,7 @@ function display.canvas(w, h, bg)
         end
     end
 
+    --- This is a hollow circle.
     function self.draw_circle(cx, cy, r, col)
         local x = 0
         local y = r
@@ -140,7 +141,9 @@ function display.canvas(w, h, bg)
         end
     end
 
-    function self.blit(bitmap, x, y, width, col)
+    --- @param bitmap table<boolean> `false` for transparency.
+    --- @param width integer Every row must be equal in length.
+    function self.blit_bitmap(bitmap, width, x, y, col)
         local height = #bitmap / width
         local xs, xe = math.max(x, 1), math.min(x + width - 1, self.w)
         local ys, ye = math.max(y, 1), math.min(y + height - 1, self.h)
@@ -151,6 +154,22 @@ function display.canvas(w, h, bg)
                 if bitmap[(src_y - 1) * width + src_x] then
                     self.pixels[(_y - 1) * self.w + _x] = col
                 end
+            end
+        end
+    end
+
+    --- @param map table<string> `" "` for transparency.
+    --- @param width integer Every row must be equal in length.
+    function self.blit_map(map, width, x, y)
+        local height = #map / width
+        local xs, xe = math.max(x, 1), math.min(x + width - 1, self.w)
+        local ys, ye = math.max(y, 1), math.min(y + height - 1, self.h)
+        for _y = ys, ye do
+            local src_y = _y - y + 1
+            for _x = xs, xe do
+                local src_x = _x - x + 1
+                local px = map[(src_y - 1) * width + src_x]
+                if px ~= " " then self.pixels[(_y - 1) * self.w + _x] = px end
             end
         end
     end

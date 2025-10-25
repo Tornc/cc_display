@@ -7,3 +7,9 @@ mc.video_to_rle(
     max_colours=16,  # You're limited to 16 colour palette.
     file_type="mp4",
 )
+mc.image_to_rle(
+    file_path="./media/toy",
+    resolution=(51 * 2, 19 * 3),
+    max_colours=16,
+    file_type="png",
+)

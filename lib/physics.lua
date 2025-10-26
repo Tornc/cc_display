@@ -114,13 +114,13 @@ local function particle_collision(p1, p2)
     -- Overlap resolution
     local overlap = r_sum - dist
     if overlap > 0 then
-        local corr_x  = v_un_x * overlap / (m1 + m2)
-        local corr_y  = v_un_y * overlap / (m1 + m2)
+        local corr_x = v_un_x * overlap / (m1 + m2)
+        local corr_y = v_un_y * overlap / (m1 + m2)
         -- Separate along normal
-        p1.x = p1.x - corr_x * p2.m
-        p1.y = p1.y - corr_y * p2.m
-        p2.x = p2.x + corr_x * p1.m
-        p2.y = p2.y + corr_y * p1.m
+        p1.x         = p1.x - corr_x * p2.m
+        p1.y         = p1.y - corr_y * p2.m
+        p2.x         = p2.x + corr_x * p1.m
+        p2.y         = p2.y + corr_y * p1.m
     end
 end
 
@@ -130,6 +130,7 @@ local function spatial_grid(cell_size)
     self.cell_size = cell_size
     self.cells = {}
 
+    --- @param particles table<Particle>
     function self.rebuild(particles)
         local cells = {}
         local insert = table.insert

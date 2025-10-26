@@ -177,6 +177,7 @@ function display.canvas(w, h, bg)
     return self
 end
 
+--- @param cv Canvas
 function display.blit_canvas(win, cv)
     assert(cv.w % 2 == 0, cv.w .. " not multiple of 2.")
     assert(cv.h % 3 == 0, cv.h .. " not multiple of 3.")

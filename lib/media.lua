@@ -81,6 +81,7 @@ function media.read_encoded_image(file_path)
     return pixels, palette, width, height
 end
 
+--- @param canvas Canvas
 function media.blit_frame(canvas, pixels, palette)
     local lookup, indices = {}, {}
     for i = 1, #palette do lookup[palette[i]] = i - 1 end

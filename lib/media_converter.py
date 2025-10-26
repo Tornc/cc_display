@@ -109,30 +109,3 @@ def image_to_rle(
         f.write(struct.pack(">I", len(encoded)))
         for idx, count in encoded:
             f.write(struct.pack(">BB", idx, count))
-
-
-def read_rle_image(file_path: str) -> tuple[list[int], int, int]:
-    with open(f"{file_path}.ei", "rb") as f:
-        # Header
-        width = int.from_bytes(f.read(4), "big")
-        height = int.from_bytes(f.read(4), "big")
-        # Palette block
-        palette_size = int.from_bytes(f.read(2), "big")
-        palette = []
-        rd, apal = f.read, palette.append  # micro-op
-        for _ in range(palette_size):
-            pb = rd(4)
-            # r | g | b | a
-            apal(((pb[0] << 24) | (pb[1] << 16) | (pb[2] << 8) | pb[3]))
-
-        # RLE block
-        rle_len = int.from_bytes(f.read(4), "big")
-        pixels = []
-        for _ in range(rle_len):
-            # Index, count
-            ic = rd(2)
-            color = palette[ic[0]]
-            for _ in range(ic[1]):
-                pixels.append(color)
-
-    return pixels, width, height

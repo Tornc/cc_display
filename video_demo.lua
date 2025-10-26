@@ -18,17 +18,12 @@ while true do
     cv.clear()
     local pixels, palette = reader.next_frame()
     if not (pixels and palette) then
-        reader.restart()
-        pixels, palette = reader.next_frame()
+        reader.close(); break
     end
-    for i, ci in ipairs(media.rgba_to_cc_palette_idxs(pixels, palette)) do
-        cv.pixels[i] = colours.toBlit(2 ^ ci)
-    end
+    media.blit_frame(cv, pixels, palette)
+    media.apply_cc_palette(win, palette)
     display.blit_canvas(win, cv)
     win.setVisible(true)
-    -- HAS to be after win.setVisible(true) for some reason. Otherwise, you'll get
-    -- flickering and completely wrong colours (using the default palette).
-    media.apply_cc_palette(MONITOR, palette)
 
     local t2 = os.epoch("utc")
     term.clear()

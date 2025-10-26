@@ -81,12 +81,11 @@ function media.read_encoded_image(file_path)
     return pixels, palette, width, height
 end
 
-function media.rgba_to_cc_palette_idxs(pixels, palette)
-    local lookup = {}
+function media.blit_frame(canvas, pixels, palette)
+    local lookup, indices = {}, {}
     for i = 1, #palette do lookup[palette[i]] = i - 1 end
-    local indices = {}
     for i = 1, #pixels do indices[i] = lookup[pixels[i]] end
-    return indices
+    for i, ci in ipairs(indices) do canvas.pixels[i] = colours.toBlit(2 ^ ci) end
 end
 
 function media.apply_cc_palette(screen, palette)

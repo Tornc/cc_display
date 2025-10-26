@@ -20,7 +20,7 @@ local jump
 local function round(n) return math.floor(n + 0.5) end
 
 local function play_sound(file_path)
-    local co = coroutine.create(
+    coroutine.resume(coroutine.create(
         function()
             for chunk in io.lines(file_path .. ".dfpwm", 16 * 1024) do
                 local buffer = DECODER(chunk)
@@ -29,8 +29,7 @@ local function play_sound(file_path)
                 end
             end
         end
-    )
-    coroutine.resume(co)
+    ))
 end
 
 local function input_listener()
@@ -161,7 +160,7 @@ local function main()
 
         if game_over then
             local game_over_text = "GAME OVER"
-            local restart_text = "Tap to restart"
+            local restart_text = "Click to restart"
 
             win.setCursorPos(round(mw * 0.5 - #game_over_text / 2 + 1), round(mh * 0.4))
             win.blit(game_over_text, string.rep("0", #game_over_text), string.rep(cv.bg, #game_over_text))

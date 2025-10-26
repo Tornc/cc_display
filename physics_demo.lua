@@ -1,7 +1,5 @@
 periphemu.create("front", "monitor")
--- periphemu.create("back", "debugger")
 
-local db_info = require("lib.db_info")
 local display = require("lib.display")
 local physics = require("lib.physics")
 
@@ -49,8 +47,6 @@ local function main()
     local wx, wy = win.getPosition()
 
     while true do
-        local t1 = os.epoch("utc")
-
         win.setVisible(false)
         cv.clear()
 
@@ -79,19 +75,13 @@ local function main()
             else
                 local o_x = p.x - math.floor(p.r) - 1
                 local o_y = p.y - math.floor(p.r) - 1
-                cv.blit_bitmap(CIRCLE[size], round(o_x), round(o_y), size, p.c)
+                cv.blit_bitmap(CIRCLE[size], size, round(o_x), round(o_y), p.c)
             end
         end
         mouse_x, mouse_y = nil, nil
 
         display.blit_canvas(win, cv)
         win.setVisible(true)
-
-        local t2 = os.epoch("utc")
-
-        term.clear()
-        print(db_info.get_frame_time(t2 - t1))
-        print(db_info.get_mem())
 
         os.sleep(0.05)
     end

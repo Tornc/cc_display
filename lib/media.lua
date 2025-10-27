@@ -26,17 +26,17 @@ function media.encoded_video_reader(file_path)
         local palette = {}
         for _ = 1, palette_size do
             local pb = { self.file.read(4):byte(1, 4) }
-            local color = bit32.lshift(pb[1], 16) + bit32.lshift(pb[2], 8) + pb[3]
-            palette[#palette + 1] = color
+            local colour = bit32.lshift(pb[1], 16) + bit32.lshift(pb[2], 8) + pb[3]
+            palette[#palette + 1] = colour
         end
 
         local rle_len = read_u32_be(self.file)
         local pixels = {}
         for _ = 1, rle_len do
             local ic = { self.file.read(2):byte(1, 2) }
-            local color = palette[ic[1] + 1]
+            local colour = palette[ic[1] + 1]
             for _ = 1, ic[2] do
-                pixels[#pixels + 1] = color
+                pixels[#pixels + 1] = colour
             end
         end
 
@@ -65,16 +65,16 @@ function media.read_encoded_image(file_path)
     local palette = {}
     for _ = 1, palette_size do
         local pb = { file.read(4):byte(1, 4) }
-        local color = bit32.lshift(pb[1], 16) + bit32.lshift(pb[2], 8) + pb[3]
-        palette[#palette + 1] = color
+        local colour = bit32.lshift(pb[1], 16) + bit32.lshift(pb[2], 8) + pb[3]
+        palette[#palette + 1] = colour
     end
     local rle_len = read_u32_be(file)
     local pixels = {}
     for _ = 1, rle_len do
         local ic = { file.read(2):byte(1, 2) }
-        local color = palette[ic[1] + 1]
+        local colour = palette[ic[1] + 1]
         for _ = 1, ic[2] do
-            pixels[#pixels + 1] = color
+            pixels[#pixels + 1] = colour
         end
     end
     file.close()
@@ -90,7 +90,7 @@ function media.blit_frame(canvas, pixels, palette)
 end
 
 function media.apply_cc_palette(screen, palette)
-    for i = 1, #palette do screen.setPaletteColor(2 ^ (i - 1), palette[i]) end
+    for i = 1, #palette do screen.setPaletteColour(2 ^ (i - 1), palette[i]) end
 end
 
 return media

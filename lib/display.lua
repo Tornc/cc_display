@@ -68,6 +68,7 @@ function display.canvas(w, h, bg)
     self.h = h
     self.bg = bg
     self.pixels = {}
+    for i = 1, self.w * self.h do self.pixels[i] = self.bg end
 
     function self.clear()
         for i = 1, self.w * self.h do self.pixels[i] = self.bg end

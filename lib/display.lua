@@ -179,21 +179,27 @@ function display.canvas(w, h, bg)
 end
 
 --- @param cv Canvas
-function display.blit_canvas(win, cv)
+--- @param x integer?
+--- @param y integer?
+function display.blit_canvas(win, cv, x, y)
     assert(cv.w % 2 == 0, cv.w .. " not multiple of 2.")
     assert(cv.h % 3 == 0, cv.h .. " not multiple of 3.")
+
+    -- Location of canvas, from top-left corner.
+    x = x and x or 1
+    y = y and y or 1
 
     -- Actual width, height
     local aw, ah = cv.w / 2, cv.h / 3
     local cvw, cvp = cv.w, cv.pixels
 
-    for y = 1, ah do
+    for _y = 1, ah do
         local chrs = {}
         local tcs = {}
         local bgcs = {}
 
-        for x = 1, aw do
-            local i = ((y - 1) * 3 * cvw) + ((x - 1) * 2) + 1
+        for _x = 1, aw do
+            local i = ((_y - 1) * 3 * cvw) + ((_x - 1) * 2) + 1
 
             local c1 = cvp[i]                 -- top-left
             local c2 = cvp[i + 1]             -- top-right
@@ -202,10 +208,10 @@ function display.blit_canvas(win, cv)
             local c5 = cvp[i + (2 * cvw)]     -- bottom-left
             local c6 = cvp[i + (2 * cvw) + 1] -- bottom-right
 
-            chrs[x], tcs[x], bgcs[x] = shrink_pixels_2x3(c1, c2, c3, c4, c5, c6)
+            chrs[_x], tcs[_x], bgcs[_x] = shrink_pixels_2x3(c1, c2, c3, c4, c5, c6)
         end
         -- Do NOT blit separately for every pixel; it will cause massive stutters!
-        win.setCursorPos(1, y)
+        win.setCursorPos(x, y + _y - 1)
         win.blit(table.concat(chrs), table.concat(tcs), table.concat(bgcs))
     end
 end

@@ -6,6 +6,8 @@ local frame_times = {}
 
 local function round(n) return math.floor(n + 0.5) end
 
+--- @param dt number
+--- @return string
 function db_info.get_frame_time(dt)
     table.insert(frame_times, dt)
     if #frame_times > MAX_FT_SAMPLES then table.remove(frame_times, 1) end
@@ -25,8 +27,18 @@ function db_info.get_frame_time(dt)
         "99%: " .. top_99 .. "ms"
 end
 
+--- @return string
 function db_info.get_mem()
     return ("MEM: %.1f KB"):format(collectgarbage("count"))
+end
+
+--- @param fn function
+--- @param ... any
+--- @return string
+function db_info.timed(fn, ...)
+    local t1 = os.epoch("utc")
+    fn(...)
+    return (os.epoch("utc") - t1) .. "ms"
 end
 
 return db_info

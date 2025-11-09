@@ -33,8 +33,9 @@ local function shrink_pixels_2x3(c1, c2, c3, c4, c5, c6)
     end
 
     local colour_counts = {}
+    local colours = { c1, c2, c3, c4, c5, c6 }
     for i = 1, 6 do
-        local col = select(i, c1, c2, c3, c4, c5, c6)
+        local col = colours[i]
         colour_counts[col] = (colour_counts[col] or 0) + 1
     end
 

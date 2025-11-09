@@ -3,8 +3,8 @@ periphemu.create("front", "monitor")
 local display = require("lib.display")
 local media = require("lib.media")
 
-local MONITOR = peripheral.find("monitor")
-local VIDEO_PATH = shell.resolve("./media/water_144")
+local MONITOR = peripheral.find("monitor"); MONITOR.setTextScale(0.5)
+local VIDEO_PATH = shell.resolve("./media/test_hr")
 
 local reader = media.encoded_video_reader(VIDEO_PATH)
 local cv = display.canvas(reader.width, reader.height, colours.toBlit(colours.black))

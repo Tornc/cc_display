@@ -2,12 +2,12 @@ local media = {}
 
 local function read_u16_be(f)
     local b1, b2 = f.read(2):byte(1, 2)
-    return bit32.lshift(b1, 8) + b2
+    return b1 * 256 + b2
 end
 
 local function read_u32_be(f)
     local b1, b2, b3, b4 = f.read(4):byte(1, 4)
-    return bit32.lshift(b1, 24) + bit32.lshift(b2, 16) + bit32.lshift(b3, 8) + b4
+    return ((b1 * 256 + b2) * 256 + b3) * 256 + b4
 end
 
 function media.encoded_video_reader(file_path)
@@ -19,25 +19,33 @@ function media.encoded_video_reader(file_path)
     self.frame_count = read_u32_be(self.file)
     self.frames_read = 0
 
+    self._palette = {}
+    self._pixels = {}
+
     function self.next_frame()
         if self.frames_read >= self.frame_count then return nil, nil end
 
         local palette_size = read_u16_be(self.file)
-        local palette = {}
-        for _ = 1, palette_size do
-            local pb = { self.file.read(4):byte(1, 4) }
-            local colour = bit32.lshift(pb[1], 16) + bit32.lshift(pb[2], 8) + pb[3]
-            palette[#palette + 1] = colour
+        local palette = self._palette
+        for i = 1, palette_size do
+            local pb1, pb2, pb3, _ = self.file.read(4):byte(1, 4)
+            palette[i] = pb1 * 65536 + pb2 * 256 + pb3
         end
 
         local rle_len = read_u32_be(self.file)
-        local pixels = {}
-        for _ = 1, rle_len do
-            local ic = { self.file.read(2):byte(1, 2) }
-            local colour = palette[ic[1] + 1]
-            for _ = 1, ic[2] do
-                pixels[#pixels + 1] = colour
+        local data = self.file.read(rle_len * 2)
+        local pixels = self._pixels
+        local pos, idx = 1, 1
+
+        while pos < #data do
+            local cidx = data:byte(pos)
+            local run = data:byte(pos + 1)
+            local colour = palette[cidx + 1]
+            for _ = 1, run do
+                pixels[idx] = colour
+                idx = idx + 1
             end
+            pos = pos + 2
         end
 
         self.frames_read = self.frames_read + 1
@@ -83,10 +91,14 @@ end
 
 --- @param canvas Canvas
 function media.blit_frame(canvas, pixels, palette)
-    local lookup, indices = {}, {}
-    for i = 1, #palette do lookup[palette[i]] = i - 1 end
-    for i = 1, #pixels do indices[i] = lookup[pixels[i]] end
-    for i, ci in ipairs(indices) do canvas.pixels[i] = colours.toBlit(2 ^ ci) end
+    local blit_map = {}
+    for i = 1, #palette do
+        blit_map[palette[i]] = colours.toBlit(2 ^ (i - 1))
+    end
+    local pix, blit = pixels, canvas.pixels
+    for i = 1, #pix do
+        blit[i] = blit_map[pix[i]]
+    end
 end
 
 function media.apply_cc_palette(screen, palette)

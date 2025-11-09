@@ -13,3 +13,10 @@ mc.image_to_rle(
     max_colours=16,
     file_type="png",
 )
+mc.video_to_rle(
+    file_path="./media/test_hr",
+    resolution=(319 * 2, 119 * 3),
+    fps=20,
+    max_colours=16,
+    file_type="mp4",
+)

@@ -71,19 +71,24 @@ function media.read_encoded_image(file_path)
 
     local palette_size = read_u16_be(file)
     local palette = {}
-    for _ = 1, palette_size do
-        local pb = { file.read(4):byte(1, 4) }
-        local colour = bit32.lshift(pb[1], 16) + bit32.lshift(pb[2], 8) + pb[3]
-        palette[#palette + 1] = colour
+    for i = 1, palette_size do
+        local pb1, pb2, pb3, _ = file.read(4):byte(1, 4)
+        palette[i] = pb1 * 65536 + pb2 * 256 + pb3
     end
+
     local rle_len = read_u32_be(file)
+    local data = file.read(rle_len * 2)
     local pixels = {}
-    for _ = 1, rle_len do
-        local ic = { file.read(2):byte(1, 2) }
-        local colour = palette[ic[1] + 1]
-        for _ = 1, ic[2] do
-            pixels[#pixels + 1] = colour
+    local pos, idx = 1, 1
+    while pos < #data do
+        local cidx = data:byte(pos)
+        local run = data:byte(pos + 1)
+        local colour = palette[cidx + 1]
+        for _ = 1, run do
+            pixels[idx] = colour
+            idx = idx + 1
         end
+        pos = pos + 2
     end
     file.close()
     return pixels, palette, width, height

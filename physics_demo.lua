@@ -75,7 +75,7 @@ local function main()
             else
                 local o_x = p.x - math.floor(p.r) - 1
                 local o_y = p.y - math.floor(p.r) - 1
-                cv.blit_bitmap(CIRCLE[size], size, round(o_x), round(o_y), p.c)
+                cv.blit_bitmap(round(o_x), round(o_y), p.c, CIRCLE[size], size)
             end
         end
         mouse_x, mouse_y = nil, nil

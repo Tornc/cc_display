@@ -75,7 +75,7 @@ local function bird(cv)
     end
 
     function self.draw()
-        self.cv.blit_map(self.sprite, self.w, self.x, self.y)
+        self.cv.blit_map(self.x, self.y, self.sprite, self.w)
     end
 
     return self

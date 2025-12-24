@@ -34,11 +34,11 @@ end
 
 --- @param fn function
 --- @param ... any
---- @return string
 function db_info.timed(fn, ...)
     local t1 = os.epoch("utc")
-    fn(...)
-    return (os.epoch("utc") - t1) .. "ms"
+    local results = { fn(...) }
+    print((os.epoch("utc") - t1) .. "ms")
+    return table.unpack(results)
 end
 
 return db_info

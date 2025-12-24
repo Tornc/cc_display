@@ -3,7 +3,7 @@ local physics = {}
 local GRAVITY = 0.05
 local DRAG_COEFFICIENT = 0.9
 
-local function particle(x, y, radius, density, particle_colour)
+function physics.particle(x, y, radius, density, particle_colour)
     --- @class Particle
     local self = {}
     self.x = x
@@ -190,7 +190,7 @@ function physics.particle_manager(n, n_cols, w, h)
     for _ = 1, n do
         table.insert(
             self.particles,
-            particle(
+            physics.particle(
                 math.random(1, self.w),
                 math.random(1, self.h),
                 weighted_random_pick(radii, probs),
